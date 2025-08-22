@@ -1,4 +1,7 @@
 local r = require('functions')
+local ok, config = pcall(require, 'config')
+if not ok or type(config) ~= 'table' then config = {} end
+
 local term = _G.term
 local colors = _G.colors or _G.colours
 local peripheral = _G.peripheral
@@ -29,7 +32,7 @@ do
 	end
 end
 
-local REFRESH_INTERVAL = 0.05
+local REFRESH_INTERVAL = tonumber(config.REFRESH_INTERVAL) or 0.05
 local buttons = {}
 local w, h = term.getSize()
 
@@ -37,8 +40,19 @@ local safetyMode = true
 local safetyShutdown = false
 local safetyHighDanger = false
 local safetyLastReason = nil
-local SAFETY_TEMP_F = 5000
-local SAFETY_DMG_HIGH = 50
+local SAFETY_TEMP_F = tonumber(config.SAFETY_TEMP_F) or 5000
+local SAFETY_DMG_HIGH = tonumber(config.SAFETY_DMG_HIGH) or 50
+local SAFETY_COOLANT_MIN = tonumber(config.SAFETY_COOLANT_MIN) or 20
+local SAFETY_FUEL_MIN = tonumber(config.SAFETY_FUEL_MIN) or 5
+local SAFETY_HEATED_MAX = tonumber(config.SAFETY_HEATED_MAX) or 99
+local SAFETY_WASTE_MAX = tonumber(config.SAFETY_WASTE_MAX) or 99
+local SAFETY_DMG_WARN = tonumber(config.SAFETY_DMG_WARN) or 20
+local SAFETY_RESTART_COOLANT_MIN = tonumber(config.SAFETY_RESTART_COOLANT_MIN) or 15
+local SAFETY_RESTART_FUEL_MIN = tonumber(config.SAFETY_RESTART_FUEL_MIN) or 5
+local SAFETY_RESTART_HEATED_MAX = tonumber(config.SAFETY_RESTART_HEATED_MAX) or 99
+local SAFETY_RESTART_WASTE_MAX = tonumber(config.SAFETY_RESTART_WASTE_MAX) or 99
+local SAFETY_RESTART_DMG_MAX = tonumber(config.SAFETY_RESTART_DMG_MAX) or 20
+local SAFETY_RESTART_TEMP_MAX = tonumber(config.SAFETY_RESTART_TEMP_MAX) or SAFETY_TEMP_F
 
 local function resetSafetyShutdown()
 	safetyShutdown = false
@@ -353,7 +367,7 @@ local function draw()
 	local safetyBtnHeight = 3
 	local safetyBtnY = topY + topH - bottomPadding - safetyBtnHeight
 	if safetyBtnY >= infoY + #lines then
-		local safetyLabel = 'Safety Mod'
+		local safetyLabel = 'Safety Mode'
 		local sColor = safetyMode and colors.lime or colors.red
 		local btnX = rightX + 1
 		local btnW = rightW - 2
@@ -470,16 +484,16 @@ local function autoRedraw()
 					reason, highDanger = 'Damage >' .. SAFETY_DMG_HIGH .. '%', true
 				elseif tempF > SAFETY_TEMP_F then
 					reason, highDanger = 'Temp >' .. SAFETY_TEMP_F .. 'F', true
-				elseif coolant < 20 then
-					reason = 'Coolant <20%'
-				elseif fuel < 5 then
-					reason = 'Fuel <5%'
-				elseif heated > 99 then
-					reason = 'Heated Coolant >99%'
-				elseif waste > 99 then
-					reason = 'Waste >99%'
-				elseif dmg > 20 then
-					reason = 'Damage >20%'
+				elseif coolant < SAFETY_COOLANT_MIN then
+					reason = 'Coolant <' .. SAFETY_COOLANT_MIN .. '%'
+				elseif fuel < SAFETY_FUEL_MIN then
+					reason = 'Fuel <' .. SAFETY_FUEL_MIN .. '%'
+				elseif heated > SAFETY_HEATED_MAX then
+					reason = 'Heated Coolant >' .. SAFETY_HEATED_MAX .. '%'
+				elseif waste > SAFETY_WASTE_MAX then
+					reason = 'Waste >' .. SAFETY_WASTE_MAX .. '%'
+				elseif dmg > SAFETY_DMG_WARN then
+					reason = 'Damage >' .. SAFETY_DMG_WARN .. '%'
 				end
 				if reason then
 					r.setStatus(false)
@@ -490,8 +504,12 @@ local function autoRedraw()
 				end
 			else
 				if safetyShutdown and (not safetyHighDanger) then
-					local allSafe = (coolant >= 15) and (fuel >= 5) and (heated <= 99) and (waste <= 99) and
-					(tempF <= SAFETY_TEMP_F) and (dmg <= 20)
+					local allSafe = (coolant >= SAFETY_RESTART_COOLANT_MIN)
+						and (fuel >= SAFETY_RESTART_FUEL_MIN)
+						and (heated <= SAFETY_RESTART_HEATED_MAX)
+						and (waste <= SAFETY_RESTART_WASTE_MAX)
+						and (tempF <= SAFETY_RESTART_TEMP_MAX)
+						and (dmg <= SAFETY_RESTART_DMG_MAX)
 					if allSafe then
 						resetSafetyShutdown()
 						r.setStatus(true)

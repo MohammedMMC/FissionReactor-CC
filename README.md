@@ -43,7 +43,7 @@ Critical conditions that require your attention:
 - **Damage** > 50%
 
 > **Note**: Auto-restart only happens when ALL normal safety values return to safe ranges.
-> You can tweak these thresholds in `config.lua`.
+> You can change these thresholds in `config.lua`.
 
 ## 📁 File Structure
 

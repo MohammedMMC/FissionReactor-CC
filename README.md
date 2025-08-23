@@ -67,7 +67,7 @@ config.lua        # User-editable settings
 
 ## 🎥 Demo Video
 
-_SOON!_
+*SOON!*
 
 ## 📜 Installation
 
@@ -97,7 +97,3 @@ _Quick installation process demonstration_
 - **ComputerCraft** computer
 - **Monitor** (optional, 5x3 recommended for best display)
 - **Fission reactor** with Logic Adapter connected to the computer
-
-## ⚖️ License
-
-**GPL v3 - free to use, modify, and distribute**

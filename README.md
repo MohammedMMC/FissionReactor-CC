@@ -67,7 +67,7 @@ config.lua        # User-editable settings
 
 ## 🎥 Demo Video
 
-*SOON!*
+[![Reactor Control Demo](https://img.youtube.com/vi/eTAx5YGsN68/0.jpg)](https://youtu.be/eTAx5YGsN68)
 
 ## 📜 Installation
 

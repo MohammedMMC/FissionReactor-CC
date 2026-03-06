@@ -78,6 +78,8 @@ config.lua         # User-editable settings
 
    ```lua
    wget https://ccfr.moma.dev install
+   ```
+   ```lua
    install
    ```
 
@@ -87,7 +89,7 @@ config.lua         # User-editable settings
 
 3. **If you chose Display Computer**, the installer asks how it connects:
    - **[1] Cable** — Logic Adapter is cabled directly to this computer
-   - **[2] Wireless** — Uses a Modem Bridge PC
+   - **[2] Wireless** — Uses a Wireless Modem Bridge PC
 
 4. **Reboot** with `Ctrl+R` — the system starts automatically
 

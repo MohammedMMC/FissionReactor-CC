@@ -2,8 +2,16 @@ return {
 	-- UI refresh interval (seconds)
 	REFRESH_INTERVAL = 0.05,
 
+	-- Temperature display unit (true = Fahrenheit, false = Celsius)
+	TEMP_IN_F = true,
+
+	-- Wireless modem mode (true = receive data wirelessly, false = direct cable)
+	IS_WIRELESS = false,
+	-- Modem channel used for wireless communication
+	MODEM_CHANNEL = 42,
+
 	-- Safety thresholds (critical shutdown)
-	SAFETY_TEMP_F = 5000,   -- °F
+	SAFETY_TEMP_F = 5000,   -- °F (always in °F internally)
 	SAFETY_DMG_HIGH = 50,   -- %
 
 	-- Safety thresholds (soft shutdown)

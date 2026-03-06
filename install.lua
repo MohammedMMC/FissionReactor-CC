@@ -1,9 +1,35 @@
-print("Installing Fusion Reactor...")
+local BASE = "https://raw.githubusercontent.com/MohammedMMC/FissionReactor-CC/refs/heads/main/"
 
-shell.run("wget https://raw.githubusercontent.com/MohammedMMC/FissionReactor-CC/refs/heads/main/functions.lua functions.lua")
-shell.run("wget https://raw.githubusercontent.com/MohammedMMC/FissionReactor-CC/refs/heads/main/config.lua config.lua")
-shell.run("wget https://raw.githubusercontent.com/MohammedMMC/FissionReactor-CC/refs/heads/main/reactor.lua reactor.lua")
+print("Fission Reactor Control System")
+print("==============================")
+print("")
+print("Select installation mode:")
+print("  [1] Display Computer (cable or wireless)")
+print("  [2] Modem Bridge (reactor-side, wireless)")
+print("")
+write("Choice (1/2): ")
+local choice = read()
 
-shell.run("cp reactor.lua startup.lua")
-
-print("Installation complete! Reboot to start.")
+if choice == "2" then
+	print("")
+	print("Installing Modem Bridge...")
+	shell.run("wget " .. BASE .. "functions.lua functions.lua")
+	shell.run("wget " .. BASE .. "config.lua config.lua")
+	shell.run("wget " .. BASE .. "reactor-modem.lua reactor-modem.lua")
+	shell.run("cp reactor-modem.lua startup.lua")
+	print("")
+	print("Modem Bridge installed!")
+	print("Set IS_WIRELESS=false in config.lua (this PC reads the reactor directly).")
+	print("Reboot to start.")
+else
+	print("")
+	print("Installing Display Computer...")
+	shell.run("wget " .. BASE .. "functions.lua functions.lua")
+	shell.run("wget " .. BASE .. "config.lua config.lua")
+	shell.run("wget " .. BASE .. "reactor.lua reactor.lua")
+	shell.run("cp reactor.lua startup.lua")
+	print("")
+	print("Display Computer installed!")
+	print("To use wireless: set IS_WIRELESS=true in config.lua")
+	print("Reboot to start.")
+end

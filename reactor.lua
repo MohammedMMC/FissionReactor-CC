@@ -1,6 +1,9 @@
-local r = require('functions')
 local ok, config = pcall(require, 'config')
 if not ok or type(config) ~= 'table' then config = {} end
+
+local IS_WIRELESS = config.IS_WIRELESS == true
+local MODEM_CHANNEL = tonumber(config.MODEM_CHANNEL) or 42
+local TEMP_IN_F = config.TEMP_IN_F ~= false -- default true
 
 local term = _G.term
 local colors = _G.colors or _G.colours
@@ -30,6 +33,69 @@ do
 	elseif term and term.setPaletteColor then
 		term.setPaletteColor(target, rC, gC, bC)
 	end
+end
+
+local r, modem, wirelessData
+
+if IS_WIRELESS then
+	modem = peripheral.find('modem')
+	if not modem then
+		error('No modem found! Attach a wireless modem.')
+	end
+	modem.open(MODEM_CHANNEL)
+	wirelessData = {}
+
+	r = {
+		getStatus = function()
+			return wirelessData.active
+		end,
+		getDamage = function()
+			return wirelessData.dmg
+		end,
+		getTemp = function()
+			return wirelessData.temp
+		end,
+		getHeatingRate = function()
+			return wirelessData.heatRate
+		end,
+		getBurnRate = function(t)
+			if t == 'max' then return wirelessData.brMax end
+			if t == 'percent' then return wirelessData.brPct end
+			return wirelessData.br
+		end,
+		getFuel = function(t)
+			if t == 'percent' then return wirelessData.fuelPct end
+			if t == 'max' then return wirelessData.fuelMax end
+			return wirelessData.fuel
+		end,
+		getWaste = function(t)
+			if t == 'percent' then return wirelessData.wastePct end
+			if t == 'max' then return wirelessData.wasteMax end
+			return wirelessData.waste
+		end,
+		getCoolant = function(t)
+			if t == 'percent' then return wirelessData.coolPct end
+			if t == 'max' then return wirelessData.coolMax end
+			return wirelessData.cool
+		end,
+		getHeatedCoolant = function(t)
+			if t == 'percent' then return wirelessData.hotPct end
+			if t == 'max' then return wirelessData.hotMax end
+			return wirelessData.hot
+		end,
+		setStatus = function(d)
+			if not modem then return false, 'no modem' end
+			modem.transmit(MODEM_CHANNEL, MODEM_CHANNEL, { type = 'command', cmd = 'setStatus', value = d })
+			return true
+		end,
+		setBurnRate = function(v)
+			if not modem then return false, 'no modem' end
+			modem.transmit(MODEM_CHANNEL, MODEM_CHANNEL, { type = 'command', cmd = 'setBurnRate', value = v })
+			return true
+		end,
+	}
+else
+	r = require('functions')
 end
 
 local REFRESH_INTERVAL = tonumber(config.REFRESH_INTERVAL) or 0.05
@@ -93,11 +159,21 @@ local function fmt(n)
 end
 
 local DEG = string.char(176)
+local TEMP_UNIT = TEMP_IN_F and 'F' or 'C'
+
 local function kelvinToF(k)
-	if type(k) ~= 'number' then
-		return nil
-	end
+	if type(k) ~= 'number' then return nil end
 	return (k - 273.15) * 9 / 5 + 32
+end
+
+local function kelvinToC(k)
+	if type(k) ~= 'number' then return nil end
+	return k - 273.15
+end
+
+local function convertTemp(k)
+	if TEMP_IN_F then return kelvinToF(k) end
+	return kelvinToC(k)
 end
 
 local function getBurnStep()
@@ -348,11 +424,11 @@ local function draw()
 	newAdd('onoff', rightX, topY, rightW, 'BTN', toggleOnOff, btnH)
 
 	local infoY = topY + btnH + 1
-	local fTemp = kelvinToF(temp)
+	local dispTemp = convertTemp(temp)
 	local lines = {
 		'Heat Rate: ' .. (heatRate and (fmt(heatRate) .. ' mB/t') or 'n/a'),
 		'Damage: ' .. (dmg and (round(dmg) .. '%') or 'n/a'),
-		'Temp: ' .. (fTemp and (fmt(fTemp) .. DEG .. 'F') or 'n/a')
+		'Temp: ' .. (dispTemp and (fmt(dispTemp) .. DEG .. TEMP_UNIT) or 'n/a')
 	}
 	for i, l in ipairs(lines) do
 		if infoY + i - 1 < topY + topH then
@@ -470,13 +546,13 @@ local function autoRedraw()
 	while true do
 		local status = r.getStatus()
 		if safetyMode then
-			local coolant = r.getCoolant and r.getCoolant('percent') or 0
-			local fuel = r.getFuel and r.getFuel('percent') or 0
-			local heated = r.getHeatedCoolant and r.getHeatedCoolant('percent') or 0
-			local waste = r.getWaste and r.getWaste('percent') or 0
-			local tempK = r.getTemp and r.getTemp() or 0
+			local coolant = r.getCoolant('percent') or 0
+			local fuel = r.getFuel('percent') or 0
+			local heated = r.getHeatedCoolant('percent') or 0
+			local waste = r.getWaste('percent') or 0
+			local tempK = r.getTemp() or 0
 			local tempF = kelvinToF(tempK) or 0
-			local dmg = r.getDamage and r.getDamage() or 0
+			local dmg = r.getDamage() or 0
 
 			if status then
 				local reason, highDanger = nil, false
@@ -523,9 +599,22 @@ local function autoRedraw()
 	end
 end
 
+local function modemListener()
+	while true do
+		local _, _, ch, _, msg = _G.os.pullEvent('modem_message')
+		if ch == MODEM_CHANNEL and type(msg) == 'table' and msg.type == 'reactor_data' then
+			wirelessData = msg.data or {}
+		end
+	end
+end
+
 draw()
 if parallel and parallel.waitForAny then
-	parallel.waitForAny(autoRedraw, inputLoop)
+	if IS_WIRELESS then
+		parallel.waitForAny(autoRedraw, inputLoop, modemListener)
+	else
+		parallel.waitForAny(autoRedraw, inputLoop)
+	end
 else
 	autoRedraw()
 end

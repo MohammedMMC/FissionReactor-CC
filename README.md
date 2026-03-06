@@ -10,8 +10,9 @@ This Lua UI runs on monitors or terminals to watch & control your reactor safely
 
 ## ✨ Key Features
 
-- **Real-time monitoring**: Heat Rate, Damage %, Temperature (°F)
+- **Real-time monitoring**: Heat Rate, Damage %, Temperature (°F or °C)
 - **Resource level bars**: Coolant, Fuel, Heated Coolant, Waste
+- **Wireless support**: Control your reactor remotely via wireless modem
 - **One-click reactor control**: Easy ONLINE/OFFLINE toggle button
 - **Intelligent safety system**: Automatic shutdown with optional auto-restart
 - **Configurable settings**: Adjust safety thresholds via `config.lua`
@@ -48,9 +49,10 @@ Critical conditions that require your attention:
 ## 📁 File Structure
 
 ```
-reactor.lua       # Main UI and control logic
-functions.lua     # Reactor API adapter and peripheral interface
-config.lua        # User-editable settings
+reactor.lua        # Main UI and control logic
+reactor-modem.lua  # Wireless modem bridge (reactor-side)
+functions.lua      # Reactor API adapter and peripheral interface
+config.lua         # User-editable settings
 ```
 
 ## 🔧 Troubleshooting
@@ -62,6 +64,7 @@ config.lua        # User-editable settings
 | **Values showing 0 or n/a**       | Make sure reactor cables are connected and enabled                                |
 | **No monitor detected**           | App automatically falls back to computer terminal                                 |
 | **Safety system not working**     | Check that all sensor methods return valid numbers                                |
+| **Wireless shows no data**        | Ensure both computers use the same `MODEM_CHANNEL` and modems are attached        |
 
 > **💡 Tip**: For best display experience, use a **5x3 monitor** setup (5 monitors wide, 3 monitors tall)
 
@@ -71,29 +74,43 @@ config.lua        # User-editable settings
 
 ## 📜 Installation
 
-### Quick Setup
-
-1. **Download the installer**:
+1. **Download and run the installer** on your computer:
 
    ```lua
    wget https://ccfr.moma.dev install
-   ```
-
-2. **Run the installation**:
-
-   ```lua
    install
    ```
 
-3. **Restart your computer**:
-   - Press `Ctrl+R` for 2-3 seconds or turn the computer off and on again
-   - The reactor control system will start automatically
+2. **Choose your installation type**:
+   - **[1] Display Computer** — The computer that shows the UI
+   - **[2] Modem Bridge** — Only for wireless setups, runs next to the reactor
 
-![Installation Demo](images/install_demo.gif)
+3. **If you chose Display Computer**, the installer asks how it connects:
+   - **[1] Cable** — Logic Adapter is cabled directly to this computer
+   - **[2] Wireless** — Uses a Modem Bridge PC
+
+4. **Reboot** with `Ctrl+R` — the system starts automatically
+
+![Old Installation Demo](images/install_demo.gif)
 _Quick installation process demonstration_
 
 ### Requirements
 
 - **ComputerCraft** computer
 - **Monitor** (optional, 5x3 recommended for best display)
-- **Fission reactor** with Logic Adapter connected to the computer
+- **Fission reactor** with Logic Adapter
+
+### Wireless Requirements
+
+For wireless mode you need **two computers**, each with a **Wireless Modem**:
+
+| Computer | Location | Installer Option |
+| --- | --- | --- |
+| **Modem Bridge** | Next to the reactor (Logic Adapter attached) | Option **2** |
+| **Display Computer** | Anywhere | Option **1** → Wireless |
+
+Both computers must use the same `MODEM_CHANNEL` in `config.lua` (default: `42`).
+
+### Temperature Unit
+
+By default temperature is shown in **Fahrenheit**. To use **Celsius**, set `TEMP_IN_F = false` in `config.lua`.

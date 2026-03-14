@@ -109,7 +109,6 @@ local safetyMode = true
 local safetyShutdown = false
 local safetyHighDanger = false
 local safetyLastReason = nil
-local redstoneShutdown = false
 local SAFETY_TEMP_F = tonumber(config.SAFETY_TEMP_F) or 5000
 local SAFETY_DMG_HIGH = tonumber(config.SAFETY_DMG_HIGH) or 50
 local SAFETY_COOLANT_MIN = tonumber(config.SAFETY_COOLANT_MIN) or 20
@@ -128,7 +127,6 @@ local function resetSafetyShutdown()
 	safetyShutdown = false
 	safetyHighDanger = false
 	safetyLastReason = nil
-	redstoneShutdown = false
 end
 
 local function drawBtn(b, _, bg, fg)
@@ -179,6 +177,16 @@ end
 local function convertTemp(k)
 	if TEMP_IN_F then return kelvinToF(k) end
 	return kelvinToC(k)
+end
+
+local function isRedstoneTriggered()
+	if not (REDSTONE_OFF_LEVEL and rs) then return false end
+	for _, side in ipairs(RS_SIDES) do
+		if (rs.getAnalogueInput(side) or 0) >= REDSTONE_OFF_LEVEL then
+			return true
+		end
+	end
+	return false
 end
 
 local function getBurnStep()
@@ -551,35 +559,6 @@ local function autoRedraw()
 	while true do
 		local status = r.getStatus()
 
-		if REDSTONE_OFF_LEVEL and rs and status then
-			for _, side in ipairs(RS_SIDES) do
-				if (rs.getAnalogueInput(side) or 0) >= REDSTONE_OFF_LEVEL then
-					r.setStatus(false)
-					safetyShutdown = true
-					safetyHighDanger = false
-					redstoneShutdown = true
-					safetyLastReason = 'Redstone on ' .. side
-					status = false
-					break
-				end
-			end
-		end
-
-		if REDSTONE_OFF_LEVEL and rs and redstoneShutdown and not status then
-			local signalClear = true
-			for _, side in ipairs(RS_SIDES) do
-				if (rs.getAnalogueInput(side) or 0) >= REDSTONE_OFF_LEVEL then
-					signalClear = false
-					break
-				end
-			end
-			if signalClear then
-				resetSafetyShutdown()
-				r.setStatus(true)
-				status = true
-			end
-		end
-
 		if safetyMode then
 			local coolant = r.getCoolant('percent') or 0
 			local fuel = r.getFuel('percent') or 0
@@ -605,6 +584,8 @@ local function autoRedraw()
 					reason = 'Waste >' .. SAFETY_WASTE_MAX .. '%'
 				elseif dmg > SAFETY_DMG_WARN then
 					reason = 'Damage >' .. SAFETY_DMG_WARN .. '%'
+				elseif isRedstoneTriggered() then
+					reason = 'Redstone signal'
 				end
 				if reason then
 					r.setStatus(false)
@@ -621,6 +602,7 @@ local function autoRedraw()
 						and (waste <= SAFETY_RESTART_WASTE_MAX)
 						and (tempF <= SAFETY_RESTART_TEMP_MAX)
 						and (dmg <= SAFETY_RESTART_DMG_MAX)
+						and not isRedstoneTriggered()
 					if allSafe then
 						resetSafetyShutdown()
 						r.setStatus(true)

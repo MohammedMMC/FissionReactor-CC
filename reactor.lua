@@ -109,6 +109,7 @@ local safetyMode = true
 local safetyShutdown = false
 local safetyHighDanger = false
 local safetyLastReason = nil
+local redstoneShutdown = false
 local SAFETY_TEMP_F = tonumber(config.SAFETY_TEMP_F) or 5000
 local SAFETY_DMG_HIGH = tonumber(config.SAFETY_DMG_HIGH) or 50
 local SAFETY_COOLANT_MIN = tonumber(config.SAFETY_COOLANT_MIN) or 20
@@ -127,6 +128,7 @@ local function resetSafetyShutdown()
 	safetyShutdown = false
 	safetyHighDanger = false
 	safetyLastReason = nil
+	redstoneShutdown = false
 end
 
 local function drawBtn(b, _, bg, fg)
@@ -554,11 +556,27 @@ local function autoRedraw()
 				if (rs.getAnalogueInput(side) or 0) >= REDSTONE_OFF_LEVEL then
 					r.setStatus(false)
 					safetyShutdown = true
-					safetyHighDanger = true
+					safetyHighDanger = false
+					redstoneShutdown = true
 					safetyLastReason = 'Redstone on ' .. side
 					status = false
 					break
 				end
+			end
+		end
+
+		if REDSTONE_OFF_LEVEL and rs and redstoneShutdown and not status then
+			local signalClear = true
+			for _, side in ipairs(RS_SIDES) do
+				if (rs.getAnalogueInput(side) or 0) >= REDSTONE_OFF_LEVEL then
+					signalClear = false
+					break
+				end
+			end
+			if signalClear then
+				resetSafetyShutdown()
+				r.setStatus(true)
+				status = true
 			end
 		end
 

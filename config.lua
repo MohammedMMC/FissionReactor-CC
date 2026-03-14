@@ -10,6 +10,10 @@ return {
 	-- Modem channel used for wireless communication
 	MODEM_CHANNEL = 42,
 
+	-- Redstone safety shutdown: shut down if any side reaches this analog level (0-15).
+	-- Set to nil or remove this line to disable.
+	REDSTONE_OFF_LEVEL = nil,
+
 	-- Safety thresholds (critical shutdown)
 	SAFETY_TEMP_F = 5000,   -- °F (always in °F internally)
 	SAFETY_DMG_HIGH = 50,   -- %

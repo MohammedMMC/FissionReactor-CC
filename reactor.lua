@@ -99,6 +99,9 @@ else
 end
 
 local REFRESH_INTERVAL = tonumber(config.REFRESH_INTERVAL) or 0.05
+local REDSTONE_OFF_LEVEL = tonumber(config.REDSTONE_OFF_LEVEL)
+local RS_SIDES = { 'top', 'bottom', 'left', 'right', 'front', 'back' }
+local rs = _G.rs or _G.redstone
 local buttons = {}
 local w, h = term.getSize()
 
@@ -545,6 +548,20 @@ end
 local function autoRedraw()
 	while true do
 		local status = r.getStatus()
+
+		if REDSTONE_OFF_LEVEL and rs and status then
+			for _, side in ipairs(RS_SIDES) do
+				if (rs.getAnalogueInput(side) or 0) >= REDSTONE_OFF_LEVEL then
+					r.setStatus(false)
+					safetyShutdown = true
+					safetyHighDanger = true
+					safetyLastReason = 'Redstone on ' .. side
+					status = false
+					break
+				end
+			end
+		end
+
 		if safetyMode then
 			local coolant = r.getCoolant('percent') or 0
 			local fuel = r.getFuel('percent') or 0

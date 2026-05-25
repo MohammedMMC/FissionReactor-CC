@@ -16,6 +16,7 @@ This Lua UI runs on monitors or terminals to watch & control your reactor safely
 - **One-click reactor control**: Easy ONLINE/OFFLINE toggle button
 - **Intelligent safety system**: Automatic shutdown with optional auto-restart
 - **Configurable settings**: Adjust safety thresholds via `config.lua`
+- **Redstone Control**: Redstone signal into Display computer
 
 ## 🎨 Status Color Guide
 
